@@ -2,11 +2,9 @@ fs = require 'fs'
 util = require 'util'
 path = require 'path'
 {Buffer} = require 'buffer'
-{Iconv}  = require 'iconv'
+iconv  = require 'iconv-lite'
 JSZip = require "jszip"
 FileKit = require "./FileKit"
-
-execSync = require 'exec-sync'
 
 FIELDSIZE = 
     C: 255
@@ -47,7 +45,7 @@ class DBFWriter
         if !(fs.existsSync @dirName)
             fs.mkdirSync @dirName
         @pathName = path.join @dirName, @fileName
-        @iconv = new Iconv 'UTF-8', @options.encoding+'//IGNORE'
+        #~ @iconv = new Iconv 'UTF-8', @options.encoding+'//IGNORE'
 
     write: ()->
         if fs.existsSync(FileKit.makeSuffix @pathName, "dbf") and @options.coverIfFileExist==false
@@ -120,7 +118,7 @@ class DBFWriter
         wsBuffer.fill 0, 12, 32
         offset = 32
         for head in @header
-            buf = @iconv.convert head.name
+            buf = iconv.encode(head.name, @options.encoding)
             # console.log buf+":"+buf.length
             k = 0
             while k<buf.length&&k<10
@@ -160,7 +158,7 @@ class DBFWriter
             val = "#{val.getFullYear()}-#{lFill (val.getMonth()+1).toString(), 2, '0'}-#{lFill val.getDate().toString(), 2, '0'} #{(lFill val.getHours().toString() , 2, '0')}:#{(lFill val.getMinutes().toString() , 2, '0')}:#{(lFill val.getSeconds().toString() , 2, '0')}"
             buf = new Buffer val
         else 
-            buf = @iconv.convert val.toString()
+            buf = iconv.encode(val.toString(), @options.encoding)
         @_writeBufferChar buf, head, wsBuffer, offset
     _writeBufferDate: (val, head, wsBuffer, offset)->
         val = "" unless val

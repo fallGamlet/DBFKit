@@ -1,11 +1,11 @@
 {EventEmitter} = require 'events'
 fs = require 'fs'
-{Iconv}  = require 'iconv'
+iconv  = require 'iconv-lite'
 JSZip = require "jszip"
 
 class DBFParser extends EventEmitter
     constructor: (@fileName, @encoding='GBK') ->
-        @iconv = new Iconv @encoding, 'UTF-8//IGNORE'
+        #~ @iconv = new Iconv @encoding, 'UTF-8//IGNORE'
         # yyyy-MM-dd HH:mm:ss 
         @timeReg1 = /^(?:(?!0000)[0-9]{4}-(?:(?:0[1-9]|1[0-2])-(?:0[1-9]|1[0-9]|2[0-8])|(?:0[13-9]|1[0-2])-(?:29|30)|(?:0[13578]|1[02])-31)|(?:[0-9]{2}(?:0[48]|[2468][048]|[13579][26])|(?:0[48]|[2468][048]|[13579][26])00)-02-29)\s+([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/
         # yyyy-MM-dd-HH
@@ -32,11 +32,11 @@ class DBFParser extends EventEmitter
         k = 0
         @fields = for i in [32 .. @headOffset - 32] by 32
             field = 
-                name: (@iconv.convert(buffer.slice i, i+11).toString().replace /[\u0000].*$/, '').replace /^[\r]+|[\n]+|[\r\n]+|[\n\r]+/, ''
-                type: (String.fromCharCode buffer[i+11]).replace /[\u0000]+$/, ''
-                address: buffer.readUInt32LE i+12, true
-                length: buffer.readUInt8 i+16
-                precision: buffer.readUInt8 i+17
+                name: iconv.decode(buffer.slice(i, i+11), @encoding).toString().replace(/[\u0000].*$/, '').replace(/^[\r]+|[\n]+|[\r\n]+|[\n\r]+/, '')
+                type: (String.fromCharCode buffer[i+11]).replace(/[\u0000]+$/, '')
+                address: buffer.readUInt32LE(i+12, true)
+                length: buffer.readUInt8(i+16)
+                precision: buffer.readUInt8(i+17)
             if field.name != ''
                 head.fields[k++] = field
             field
@@ -65,7 +65,7 @@ class DBFParser extends EventEmitter
     _parseField: (begin, end, field, buffer) =>
         switch field.type
             when 'C'
-                value = @iconv.convert(buffer.slice begin, end).toString().replace /^\x20+|\x20+$/g, ''
+                value = iconv.decode(buffer.slice(begin, end), @encoding).toString().replace /^\x20+|\x20+$/g, ''
                 if value
                     if @timeReg1.test value
                         value = new Date value
