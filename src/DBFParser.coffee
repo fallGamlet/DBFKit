@@ -18,7 +18,7 @@ class DBFParser extends EventEmitter
             @_parseHead buffer
             @_parseRecords buffer
             @emit 'end'
-            
+
     parseZip: ->
 
     _parseHead: (buffer) =>
@@ -50,7 +50,7 @@ class DBFParser extends EventEmitter
         for point in [@headOffset..endPoint] by @recordLength when point < bufferLength
             bufferTemp = buffer.slice point, point+@recordLength
             # console.log "begin:#{point}; end:#{point+@recordLength};"
-            record = []
+            record = {}
             i = 0
             curPoint = 1
             is_deleted = (bufferTemp[0] == 42 || bufferTemp[0] == '*');
@@ -58,8 +58,9 @@ class DBFParser extends EventEmitter
                 if field.name == ''
                     curPoint+=field.length
                 else
-                    record[i++] = @_parseField curPoint, curPoint+=field.length, field, bufferTemp
-            record.push({name: '_deleted_', value: is_deleted });
+                    tmpField = @_parseField(curPoint, curPoint+=field.length, field, bufferTemp)
+                    record[tmpField['name']] = tmpField['value']
+            record['_deleted_'] = is_deleted;
             @emit 'record', record
 
     _parseField: (begin, end, field, buffer) =>
