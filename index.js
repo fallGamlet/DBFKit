@@ -3,6 +3,6 @@ DBFWriter = require('./lib/DBFWriter')
 DBFQuery = require('./lib/DBFQuery')
 module.exports = {
     DBFParser: DBFParser,
-    DBFWriter: DBFWriter
+    DBFWriter: DBFWriter,
     DBFQuery: DBFQuery
 }
