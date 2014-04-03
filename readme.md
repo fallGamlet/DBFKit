@@ -1,4 +1,3 @@
-
 ## Example
 
 ### DBFWriter
@@ -69,3 +68,31 @@
     });
 
     dbfParser.parse();
+    
+### DBFQuery
+    DBFQuery = require("dbfkit").DBFQuery;
+    
+    // KL_OBRAZ.DBF size: 15 Kb
+    var selectObr = new DBFQuery('./KL_OBRAZ.DBF', null, null, 
+							["NAIM","KOD"], null,
+							function(records){
+								console.log(records);
+								console.log('ended... KL_OBRAZ');
+							});
+	
+    // test1.dbf size: 357 Kb
+    var selectPeaple = new DBFQuery('./test1.dbf', 
+    						function(record){ return record['KART_N'] >= 3 && record['KART_N'] < 100},
+    						['KOD_RM', 'FIO'],
+    						['KART_N','IND_KART','KOD_RM','FIO','ROGD_DT', 'OBRAZ'],
+    						'cp866',
+    						function(records) {
+    							console.log("===============================");
+    							var count = DBFQuery.leftJoin(records, 'OBRAZ', selectObr.records, "KOD");
+    							console.log(" Count joined:"+count);
+    							console.log(records);
+    							console.log('ended... test1');
+                            });	 
+    
+    selectObr.selectSimple();
+    selectPeaple.selectSimple();
